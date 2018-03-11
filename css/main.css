@@ -1,0 +1,16 @@
+body {
+	margin: 0;
+	padding: 0;
+}
+
+#c1 {	
+	background-image: url(../img/canvas-bg.jpg);
+	height: 400px;
+	width: 400px;
+	display: block;
+	margin: 50px auto;	
+}
+
+#apple {
+	display: none;
+}
