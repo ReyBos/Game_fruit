@@ -136,6 +136,7 @@ function Model(numberRows, numberCols, widthCell, heigthCell) {
 
 // Отображение игрового процесса
 var view = {
+	// Рисует все поле 
 	displayField: function(field) {
 		var myCanvas = document.getElementById("c1");
 		var ctx = myCanvas.getContext("2d");
@@ -147,4 +148,15 @@ var view = {
 			}
 		}
 	},
+}
+
+// Кнопка New Game
+var newGame = document.getElementById("new-game");
+newGame.onclick = function() {
+	var myCanvas = document.getElementById("c1");
+	var ctx = myCanvas.getContext("2d");
+	ctx.clearRect(0, 0, 400, 400);
+	var model = new Model(8, 8, 50, 50);	
+	model.fillField();	
+	view.displayField(model.field);
 }

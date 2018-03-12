@@ -3,13 +3,42 @@ body {
 	padding: 0;
 }
 
-#c1 {	
-	background-image: url(../img/canvas-bg.jpg);
-	height: 400px;
+.main-frame {
+	background: url(../img/bg.jpg) center center/cover no-repeat;
+}
+
+.container {
 	width: 400px;
-	display: block;
-	margin: 50px auto;	
+	margin: 0 auto;
+	height: 100vh;	
+	font-family: 'New Rocker', cursive;
+}
+
+.title-h1 {
+	padding: 20px 0 0 0;
+	margin: 0;
+	text-align: center;
+	font-size: 40px;
+	color: #d8702c;
+}
+
+#c1 {	
+	background-image: url(../img/canvas-bg.png);
+	height: 400px;
+	width: 400px;	
+	margin: 30px 0;	
 	cursor: pointer;
+}
+
+#new-game {
+	margin: 0 auto;
+	display: block;
+	cursor: pointer;
+	font-family: 'New Rocker', cursive;
+	font-size: 20px;
+	background-color: #b0baaf;
+	outline: none;
+	opacity: 0.65;
 }
 
 .fruit {
