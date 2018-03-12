@@ -57,3 +57,18 @@ function Model(numberRows, numberCols) {
 		}
 	}
 }
+
+// Отображение игрового процесс
+var view = {
+	displayField: function(field) {
+		var myCanvas = document.getElementById("c1");
+		var ctx = myCanvas.getContext("2d");
+		for (var i = 0; i < field.length; i++) {
+			for (var j = 0; j < field[i].length; j++) {	
+				var id = field[i][j].typeFruit;
+				var pic = document.getElementById(id);			
+				ctx.drawImage(pic, field[i][j].position.x1, field[i][j].position.y1);
+			}
+		}
+	},
+}
