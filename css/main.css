@@ -11,6 +11,6 @@ body {
 	margin: 50px auto;	
 }
 
-#apple {
+.fruit {
 	display: none;
 }
