@@ -148,17 +148,21 @@ var view = {
 	},
 
 	// Выделяет или снимает выделение с ячейки по которой кликнули
-	activeInactiveCell: function(row, col, inactive, model, context) {	
+	activeInactiveCell: function(row, col, active, model, context) {	
 		var x = model.field[row][col].position.x1; // левый верхний угол
 		var y = model.field[row][col].position.y1; // левый верхний угол
 		var width = model.widthCell;
 		var heigth = model.heigthCell;
-		if (model.field[row][col].canBeMoved && inactive) {			
+		if (model.field[row][col].canBeMoved && !active) {
+			// если нет активных ячеек
+			context.beginPath(); 			
 			context.strokeStyle = "black";
 			context.lineWidth = "1";
 			context.rect(x + 1, y + 1, width - 2, heigth - 2);
 			context.stroke();
 		} else {
+			// если ячейка по которой кликнули активна, снимаем выделение
+			context.beginPath(); 
 			context.clearRect(x, y, width, heigth);
 			var id = model.field[row][col].typeFruit;			
 			var pic = document.getElementById(id);			
@@ -172,7 +176,7 @@ var gameStart = false;
 var myCanvas = document.getElementById("c1");
 var ctx = myCanvas.getContext("2d");
 var model = new Model(8, 8, 50, 50);
-var inactive = true; // ни одна ячейка не активна
+var active = false; // ни одна ячейка не активна
 // Номер строки и столбца активной ячейки
 var activeRow = -1;
 var activeCol = -1;
@@ -185,7 +189,7 @@ newGame.onclick = function() {
 	ctx.beginPath(); 			
 	model.fillField();	
 	view.displayField(model.field, ctx);
-	inactive = true;
+	active = false;
 	activeRow = -1;
 	activeCol = -1;
 }
@@ -199,20 +203,37 @@ myCanvas.onclick = function(e) {
 		var clickCol = Math.floor(e.offsetX / model.widthCell);
 		// Выполняем действие если ячейку можно переместить
 		if (model.field[clickRow][clickCol].canBeMoved) {			
-			if (inactive && activeRow === -1 && activeCol === -1) {
+			if (!active && activeRow === -1 && activeCol === -1) {
 				// если нет активных ячеек то выделяем по которой кликнули	
 				ctx.beginPath();
-				view.activeInactiveCell(clickRow, clickCol, inactive, model, ctx);		
+				view.activeInactiveCell(clickRow, clickCol, active, model, ctx);		
 				activeRow = clickRow;
 				activeCol = clickCol;
-				inactive = false;
-			} else if (!inactive && clickRow === activeRow && clickCol === activeCol) {
-				// если активна ячейка по которой кликнули, снимаем выделение с нее
-				ctx.beginPath();
-				view.activeInactiveCell(clickRow, clickCol, inactive, model, ctx);
-				activeRow = -1;
-				activeCol = -1;
-				inactive = true;
+				active = true;
+			} else if (active) {
+				// если на поле есть активная ячейка
+				if (clickRow === activeRow && clickCol === activeCol) {
+					// если активна ячейка по которой кликнули, снимаем выделение с нее
+					ctx.beginPath();
+					view.activeInactiveCell(clickRow, clickCol, active, model, ctx);
+					activeRow = -1;
+					activeCol = -1;
+					active = false;
+				} else if ((clickRow !== activeRow || clickCol !== activeCol) && (Math.abs(clickRow - activeRow) <= 1) && (Math.abs(clickCol - activeCol) <= 1)) {
+					// Если кликнули по ячейке соседней с активной 
+					console.log("Сосед");
+				} else {
+					// Если клинкнули по удаленной ячейке снимаем выделение с текущей активной
+					ctx.beginPath();
+					view.activeInactiveCell(activeRow, activeCol, active, model, ctx);
+					active = false;
+					// Активной назначаем ячейку по которой кликнули
+					activeRow = clickRow;
+					activeCol = clickCol;
+					ctx.beginPath();
+					view.activeInactiveCell(activeRow, activeCol, active, model, ctx);
+					active = true;
+				}
 			}
 		}
 	}	
