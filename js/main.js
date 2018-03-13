@@ -8,8 +8,8 @@ function Cell(startX1, startY1) {
 
 function CellContent(startX1, startY1, mayExplode, canBeMoved) {
 	Cell.apply(this, arguments),
-	this.mayExplode = mayExplode,
-	this.canBeMoved = canBeMoved
+	this.mayExplode = mayExplode, // может объединятся в ряд
+	this.canBeMoved = canBeMoved  // можно передвигать 
 }
 
 function Fruit(startX1, startY1, mayExplode, canBeMoved, typeFruit) {
@@ -20,15 +20,15 @@ function Fruit(startX1, startY1, mayExplode, canBeMoved, typeFruit) {
 // Игровое поле
 function Model(numberRows, numberCols, widthCell, heigthCell) {	
 	this.field = [],       // Содержит объекты игрового поля
-	this.rows = numberRows; // Число строк 
-	this.cols = numberCols; // Число столбцов
-	this.widthCell = widthCell; // ширина ячейки
-	this.heigthCell = heigthCell; // высота ячейки
+	this.rows = numberRows, // Число строк 
+	this.cols = numberCols, // Число столбцов
+	this.widthCell = widthCell, // ширина ячейки
+	this.heigthCell = heigthCell, // высота ячейки
 
 	// заполняет игровое поле случайными фруктами
-	var startX1 = 0; // левый верхний угол игрового поля
-	var startY1 = 0; // левый верхний угол игрового поля
 	this.fillField = function() {
+		var startX1 = 0; // левый верхний угол игрового поля
+		var startY1 = 0; // левый верхний угол игрового поля
 		for (var i = 0; i < this.rows; i++) {
 			this.field[i] = [];
 			for (var j = 0; j < this.cols; j++) {
@@ -136,27 +136,84 @@ function Model(numberRows, numberCols, widthCell, heigthCell) {
 
 // Отображение игрового процесса
 var view = {
-	// Рисует все поле 
-	displayField: function(field) {
-		var myCanvas = document.getElementById("c1");
-		var ctx = myCanvas.getContext("2d");
+	// Отображает все поле 
+	displayField: function(field, context) {		
 		for (var i = 0; i < field.length; i++) {
 			for (var j = 0; j < field[i].length; j++) {	
 				var id = field[i][j].typeFruit;
 				var pic = document.getElementById(id);			
-				ctx.drawImage(pic, field[i][j].position.x1, field[i][j].position.y1);
+				context.drawImage(pic, field[i][j].position.x1, field[i][j].position.y1);
 			}
 		}
 	},
+
+	// Выделяет или снимает выделение с ячейки по которой кликнули
+	activeInactiveCell: function(row, col, inactive, model, context) {	
+		var x = model.field[row][col].position.x1; // левый верхний угол
+		var y = model.field[row][col].position.y1; // левый верхний угол
+		var width = model.widthCell;
+		var heigth = model.heigthCell;
+		if (model.field[row][col].canBeMoved && inactive) {			
+			context.strokeStyle = "black";
+			context.lineWidth = "1";
+			context.rect(x + 1, y + 1, width - 2, heigth - 2);
+			context.stroke();
+		} else {
+			context.clearRect(x, y, width, heigth);
+			var id = model.field[row][col].typeFruit;			
+			var pic = document.getElementById(id);			
+			context.drawImage(pic, x, y)
+		}
+	}
 }
+
+
+var gameStart = false;
+var myCanvas = document.getElementById("c1");
+var ctx = myCanvas.getContext("2d");
+var model = new Model(8, 8, 50, 50);
+var inactive = true; // ни одна ячейка не активна
+// Номер строки и столбца активной ячейки
+var activeRow = -1;
+var activeCol = -1;
 
 // Кнопка New Game
 var newGame = document.getElementById("new-game");
-newGame.onclick = function() {
-	var myCanvas = document.getElementById("c1");
-	var ctx = myCanvas.getContext("2d");
+newGame.onclick = function() {	
+	gameStart = true;	
 	ctx.clearRect(0, 0, 400, 400);
-	var model = new Model(8, 8, 50, 50);	
+	ctx.beginPath(); 			
 	model.fillField();	
-	view.displayField(model.field);
+	view.displayField(model.field, ctx);
+	inactive = true;
+	activeRow = -1;
+	activeCol = -1;
+}
+
+// Нажата левая кнопка мыши на игровом поле 
+myCanvas.onclick = function(e) {
+	if (gameStart) {	
+		// Номер нажатой строки	
+		var clickRow = Math.floor(e.offsetY / model.heigthCell);
+		// Номер нажатого столбца		
+		var clickCol = Math.floor(e.offsetX / model.widthCell);
+		// Выполняем действие если ячейку можно переместить
+		if (model.field[clickRow][clickCol].canBeMoved) {			
+			if (inactive && activeRow === -1 && activeCol === -1) {
+				// если нет активных ячеек то выделяем по которой кликнули	
+				ctx.beginPath();
+				view.activeInactiveCell(clickRow, clickCol, inactive, model, ctx);		
+				activeRow = clickRow;
+				activeCol = clickCol;
+				inactive = false;
+			} else if (!inactive && clickRow === activeRow && clickCol === activeCol) {
+				// если активна ячейка по которой кликнули, снимаем выделение с нее
+				ctx.beginPath();
+				view.activeInactiveCell(clickRow, clickCol, inactive, model, ctx);
+				activeRow = -1;
+				activeCol = -1;
+				inactive = true;
+			}
+		}
+	}	
 }
