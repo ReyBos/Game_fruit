@@ -1,9 +1,7 @@
 // Одна ячейка игрового поля 
 function Cell(startX1, startY1) {
 	this.position = {x1: startX1, // текущее положение, левый верхний угол
-					 y1: startY1, 
-					 x2: -1,      // для предыдущего положения, левый верхний угол
-					 y2: -1}
+					 y1: startY1}
 }
 
 function CellContent(startX1, startY1, mayExplode, canBeMoved) {
@@ -90,7 +88,6 @@ function Model(numberRows, numberCols, widthCell, heigthCell) {
 				}
 			}
 		}
-
 		// проверяем соседние ячейки по вертикали вверх
 		for (var j = coordRow - 1; j >= 0; j--) {
 			// Если соседняя ячейка не пустая, выполняется проверка
@@ -112,7 +109,6 @@ function Model(numberRows, numberCols, widthCell, heigthCell) {
 				}
 			}
 		}
-
 		var result = [false, 1, false, 1];
 		/* 
 			result[0] = true - по горизонтали три или более одинаковых объекта подряд
@@ -129,8 +125,23 @@ function Model(numberRows, numberCols, widthCell, heigthCell) {
 			result[2] = true;
 			result[3] = verticalalCount;
 		}
-
 		return result;
+	}, 
+
+	this.swapCell = function(activeRow, activeCol, clickRow, clickCol) {
+		var activeCell = this.field[activeRow][activeCol];
+		var clickCell = this.field[clickRow][clickCol];			
+		// После перерисовки меняем местами объекты в таблице field		
+		var obj = this.field[activeRow][activeCol];
+		var objPosX1 = this.field[activeRow][activeCol].position.x1;
+		var objPosY1 = this.field[activeRow][activeCol].position.y1;		
+		this.field[activeRow][activeCol].position.x1 = this.field[clickRow][clickCol].position.x1;
+		this.field[activeRow][activeCol].position.y1 = this.field[clickRow][clickCol].position.y1;
+		this.field[activeRow][activeCol] = this.field[clickRow][clickCol];		
+		this.field[clickRow][clickCol].position.x1 = objPosX1;
+		this.field[clickRow][clickCol].position.y1 = objPosY1;
+		this.field[clickRow][clickCol] = obj;
+
 	}
 }
 
@@ -168,7 +179,7 @@ var view = {
 			var pic = document.getElementById(id);			
 			context.drawImage(pic, x, y)
 		}
-	}
+	}, 	
 }
 
 
@@ -204,7 +215,7 @@ myCanvas.onclick = function(e) {
 		// Выполняем действие если ячейку можно переместить
 		if (model.field[clickRow][clickCol].canBeMoved) {			
 			if (!active && activeRow === -1 && activeCol === -1) {
-				// если нет активных ячеек то выделяем по которой кликнули	
+				// если нет активных ячеек то выделяем ту по которой кликнули	
 				ctx.beginPath();
 				view.activeInactiveCell(clickRow, clickCol, active, model, ctx);		
 				activeRow = clickRow;
@@ -219,11 +230,32 @@ myCanvas.onclick = function(e) {
 					activeRow = -1;
 					activeCol = -1;
 					active = false;
-				} else if ((clickRow !== activeRow || clickCol !== activeCol) && (Math.abs(clickRow - activeRow) <= 1) && (Math.abs(clickCol - activeCol) <= 1)) {
-					// Если кликнули по ячейке соседней с активной 
-					console.log("Сосед");
+				} else if ((clickRow === activeRow && Math.abs(clickCol - activeCol) === 1) || (clickCol === activeCol && Math.abs(clickRow - activeRow) === 1) ) {
+					// Если кликнули по ячейке соседней по горизонтали или вертикали с активной 
+					swapSettings.fillSwapSettings(model, activeRow, activeCol, clickRow, clickCol);
+					model.swapCell(activeRow, activeCol, clickRow, clickCol);
+					// Проверяем образуется ли ряд из трех одинаковых фруктов после перестановки
+					var swapResult1 = model.checkCell(activeRow, activeCol);
+					var swapResult2 = model.checkCell(clickRow, clickCol);
+					if (swapResult1[0] || swapResult1[2] || swapResult2[0] || swapResult2[2]) {						
+						// Если образуется ряд
+						console.log("Ряд образуется");
+						if (clickRow === activeRow) {
+							swapX();
+						} else if (clickCol === activeCol) {
+							console.log("заглушка");							
+						}
+					} else {
+						// Если ряд не образуется то возвращаем фрукты на место
+						console.log("Ряд не образуется");
+						reverseSwapX();	
+						model.swapCell(activeRow, activeCol, clickRow, clickCol);											
+					}	
+					activeRow = -1;
+					activeCol = -1;
+					active = false;
 				} else {
-					// Если клинкнули по удаленной ячейке снимаем выделение с текущей активной
+					// Если клинкнули по удаленной от активной ячейке или расположенной по диагонали, то снимаем выделение с текущей активной
 					ctx.beginPath();
 					view.activeInactiveCell(activeRow, activeCol, active, model, ctx);
 					active = false;
@@ -237,4 +269,91 @@ myCanvas.onclick = function(e) {
 			}
 		}
 	}	
+}
+
+var swapSettings = {	
+	fillSwapSettings: function(model, activeRow, activeCol, clickRow, clickCol) {
+		var activeCell = model.field[activeRow][activeCol];
+		var clickCell = model.field[clickRow][clickCol];	
+		// заполняем данные для обмена
+		swapSettings.width = model.widthCell;
+		swapSettings.heigth = model.heigthCell;				
+		if (activeCell.position.x1 < clickCell.position.x1 || activeCell.position.y1 < clickCell.position.y1) {
+			// если обмен идет с ячейкой расположенной справа или снизу от активной, то активная считается под номером 1
+			swapSettings.x1 = activeCell.position.x1;
+			swapSettings.y1 = activeCell.position.y1;
+			swapSettings.pic1 = document.getElementById(activeCell.typeFruit);
+			swapSettings.x2 = clickCell.position.x1;
+			swapSettings.y2 = clickCell.position.y1;
+			swapSettings.pic2 = document.getElementById(clickCell.typeFruit);
+			swapSettings.x = clickCell.position.x1;
+			swapSettings.y = clickCell.position.y1;
+		} else {
+			// если обмен идет с ячейкой расположенной слева или сверху от активной, то активная считается под номером 2
+			swapSettings.x2 = activeCell.position.x1;
+			swapSettings.y2 = activeCell.position.y1;
+			swapSettings.pic2 = document.getElementById(activeCell.typeFruit);
+			swapSettings.x1 = clickCell.position.x1;
+			swapSettings.y1 = clickCell.position.y1;
+			swapSettings.pic1 = document.getElementById(clickCell.typeFruit);
+			swapSettings.x = activeCell.position.x1;
+			swapSettings.y = activeCell.position.y1;
+		}	
+	},	
+}
+
+function swapX() {
+	ctx.clearRect(swapSettings.x1, swapSettings.y1, swapSettings.width, swapSettings.heigth);
+	ctx.clearRect(swapSettings.x2, swapSettings.y2, swapSettings.width, swapSettings.heigth);
+	ctx.beginPath();
+	ctx.drawImage(swapSettings.pic1, swapSettings.x1, swapSettings.y1);
+	ctx.drawImage(swapSettings.pic2, swapSettings.x2, swapSettings.y2);
+	swapSettings.x1 += 2;
+	swapSettings.x2 -= 2;
+	if (swapSettings.x1 <= swapSettings.x) {
+		requestAnimationFrame(swapX);
+	} 
+	if (swapSettings.x1 > swapSettings.x) {
+		swapSettings.x1 -= 2;
+		swapSettings.x2 += 2;
+	}	
+}
+
+function reverseSwapX() {
+	ctx.clearRect(swapSettings.x1, swapSettings.y1, swapSettings.width, swapSettings.heigth);
+	ctx.clearRect(swapSettings.x2, swapSettings.y2, swapSettings.width, swapSettings.heigth);
+	ctx.beginPath();
+	ctx.drawImage(swapSettings.pic1, swapSettings.x1, swapSettings.y1);
+	ctx.drawImage(swapSettings.pic2, swapSettings.x2, swapSettings.y2);
+	swapSettings.x1 += 2;
+	swapSettings.x2 -= 2;
+	if (swapSettings.x1 <= swapSettings.x) {
+		requestAnimationFrame(reverseSwapX);
+	} 
+	if (swapSettings.x1 > swapSettings.x) {
+		swapSettings.x1 -= 2;
+		swapSettings.x2 += 2;
+		reverseSwapXPart2();
+	}	
+}
+
+function reverseSwapXPart2() {
+	ctx.clearRect(swapSettings.x1, swapSettings.y1, swapSettings.width, swapSettings.heigth);
+	ctx.clearRect(swapSettings.x2, swapSettings.y2, swapSettings.width, swapSettings.heigth);
+	ctx.beginPath();
+	ctx.drawImage(swapSettings.pic1, swapSettings.x1, swapSettings.y1);
+	ctx.drawImage(swapSettings.pic2, swapSettings.x2, swapSettings.y2);
+	swapSettings.x1 -= 2;
+	swapSettings.x2 += 2;
+	if (swapSettings.x2 <= swapSettings.x) {
+		requestAnimationFrame(reverseSwapXPart2);
+	} 
+	if (swapSettings.x2 > swapSettings.x) {
+		swapSettings.x1 += 2;
+		swapSettings.x2 -= 2;		
+	}	
+}
+
+myCanvas.oncontextmenu = function() {
+	return false;
 }
