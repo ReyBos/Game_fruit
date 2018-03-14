@@ -64,52 +64,87 @@ function Model(numberRows, numberCols, widthCell, heigthCell) {
 	// из трех и более одинаковых объектов
 	this.checkCell = function(coordRow, coordCol) {
 		var horisontalCount = 1; // для подсчёта горизонтальных совпадений
+		var fruitRow = coordRow;
+		var FruitCol = coordCol;
+		// первый в горизонтальной комбинации фрукт		
+		var leftFruitCol; // номер столбца
+		// последний в горизонтальной комбинации фрукт	
+		var rightFruitCol; // номер столбца
 		var verticalalCount = 1; // для подсчёта вертикальных совпадений
-		var checkFruit = this.field[coordRow][coordCol].typeFruit; // какой фрукт в ячейке
+		// первый в вертикальной комбинации фрукт
+		var topFruitRow; // номер строки		
+		// последний в вертикальной комбинации фрукт
+		var bottomFruitRow; // номер строки		
 
+		var checkFruit = this.field[coordRow][coordCol].typeFruit; // какой фрукт в ячейке		
 		// проверяем соседние ячейки по горизонтали слева 
-		for (var i = coordCol - 1; i >= 0; i--) {
-			// Если соседняя ячейка не пустая, выполняется проверка
-			if (this.field[coordRow][i]) {
-				if (checkFruit === this.field[coordRow][i].typeFruit) {
-					horisontalCount++;
-				} else {
-					break;
+		if (coordCol !== 0) {
+			for (var i = coordCol - 1; i >= 0; i--) {
+				// Если соседняя ячейка не пустая, выполняется проверка
+				if (this.field[coordRow][i]) {
+					if (checkFruit === this.field[coordRow][i].typeFruit) {
+						horisontalCount++;
+						leftFruitCol = i;					
+					} else {
+						leftFruitCol = i + 1;					
+						break;
+					}
 				}
 			}
+		} else {
+			leftFruitCol = 0;
 		}
 		// проверяем соседние ячейки по горизонтали справа
-		for (var i = coordCol + 1; i < this.field[0].length; i++) {
-			if (this.field[coordRow][i]) {
-				if (checkFruit === this.field[coordRow][i].typeFruit) {
-					horisontalCount++;
-				} else {
-					break;
+		if (coordCol !== (this.field[0].length - 1)) {
+			for (var i = coordCol + 1; i < this.field[0].length; i++) {
+				if (this.field[coordRow][i]) {
+					if (checkFruit === this.field[coordRow][i].typeFruit) {
+						horisontalCount++;
+						rightFruitCol = i;						
+					} else {
+						rightFruitCol = i - 1;
+						break;
+					}
 				}
 			}
+		} else {
+			rightFruitCol = this.field[0].length - 1;
 		}
 		// проверяем соседние ячейки по вертикали вверх
-		for (var j = coordRow - 1; j >= 0; j--) {
-			// Если соседняя ячейка не пустая, выполняется проверка
-			if (this.field[j][coordCol]) {
-				if (checkFruit === this.field[j][coordCol].typeFruit) {
-					verticalalCount++;
-				} else {
-					break;
+		if (coordRow !== 0) {
+			for (var j = coordRow - 1; j >= 0; j--) {
+				// Если соседняя ячейка не пустая, выполняется проверка
+				if (this.field[j][coordCol]) {
+					if (checkFruit === this.field[j][coordCol].typeFruit) {
+						verticalalCount++;
+						topFruitRow = j;
+					} else {
+						topFruitRow = j + 1;
+						break;
+					}
 				}
 			}
+		} else {
+			topFruitRow = 0;
 		}
 		// проверяем соседние ячейки по вертикали вниз
-		for (var j = coordRow + 1; j < this.field.length; j++) {			
-			if (this.field[j][coordCol]) {
-				if (checkFruit === this.field[j][coordCol].typeFruit) {
-					verticalalCount++;
-				} else {
-					break;
+		if (coordRow !== (this.field.length - 1)) {
+			for (var j = coordRow + 1; j < this.field.length; j++) {			
+				if (this.field[j][coordCol]) {
+					if (checkFruit === this.field[j][coordCol].typeFruit) {
+						verticalalCount++;
+						bottomFruitRow = j;
+					} else {
+						bottomFruitRow = j - 1;
+						break;
+					}
 				}
-			}
+			} 
+		} else {
+				bottomFruitRow = this.field.length - 1;
 		}
-		var result = [false, 1, false, 1];
+
+		var result = [false, 1, false, 1, leftFruitCol, rightFruitCol, fruitRow, topFruitRow, bottomFruitRow, FruitCol];
 		/* 
 			result[0] = true - по горизонтали три или более одинаковых объекта подряд
 			result[1] - количество одинаковых объектов по горизонтали
@@ -128,6 +163,7 @@ function Model(numberRows, numberCols, widthCell, heigthCell) {
 		return result;
 	}, 
 
+	// Ячейки меняются местами
 	this.swapCell = function(activeRow, activeCol, clickRow, clickCol) {
 		var activeCell = this.field[activeRow][activeCol];
 		var clickCell = this.field[clickRow][clickCol];			
@@ -141,6 +177,47 @@ function Model(numberRows, numberCols, widthCell, heigthCell) {
 		this.field[clickRow][clickCol].position.x1 = objPosX1;
 		this.field[clickRow][clickCol].position.y1 = objPosY1;
 		this.field[clickRow][clickCol] = obj;
+	}, 
+
+	// Список ячеек к удалению
+	this.whichCellDell = {},
+
+	// Заполняем список к удалению
+	this.fillWhichCellDell = function(result1, result2) {
+		//		        0   1    2    3        4            5            6          7             8              9
+		// result = [false, 1, false, 1, leftFruitCol, rightFruitCol, fruitRow, topFruitRow, bottomFruitRow, FruitCol]
+		// совпадение в строке
+		if (result1[0]) {
+			this.whichCellDell.row1 = {
+				numberRow: result1[6], // номер строки для удаления
+				startRow: result1[4], // начало строки
+				endRow: result1[5] // конец строки
+			}
+		}
+		// совпадение в столбце
+		if (result1[2]) {
+			this.whichCellDell.col1 = {
+				numberCol: result1[9],
+				startCol: result1[7],
+				endCol: result1[8]
+			}
+		}
+		// совпадение в строке
+		if (result2[0]) {
+			this.whichCellDell.row2 = {
+				numberRow: result2[6], // номер строки для удаления
+				startRow: result2[4], // начало строки
+				endRow: result2[5] // конец строки
+			}
+		}
+		// совпадение в столбце
+		if (result2[2]) {
+			this.whichCellDell.col2 = {
+				numberCol: result2[9],
+				startCol: result2[7],
+				endCol: result2[8]
+			}
+		}
 	}
 }
 
@@ -178,9 +255,8 @@ var view = {
 			var pic = document.getElementById(id);			
 			context.drawImage(pic, x, y)
 		}
-	}, 	
+	}, 
 }
-
 
 var gameStart = false;
 var myCanvas = document.getElementById("c1");
@@ -235,18 +311,15 @@ myCanvas.onclick = function(e) {
 					model.swapCell(activeRow, activeCol, clickRow, clickCol);
 					// Проверяем образуется ли ряд из трех одинаковых фруктов после перестановки
 					var swapResult1 = model.checkCell(activeRow, activeCol);
+					swapSettings.result1 = swapResult1;
 					var swapResult2 = model.checkCell(clickRow, clickCol);
+					swapSettings.result2 = swapResult2;
 					// Образуется ли комбинация, если нет, фрукты нужно переместить на место
 					swapSettings.result = (swapResult1[0] || swapResult1[2] || swapResult2[0] || swapResult2[2]);
-					if (swapResult1[0] || swapResult1[2] || swapResult2[0] || swapResult2[2]) {						
-						// Если образуется комбинация						
-						if (clickRow === activeRow) {
-							// перемещение по х
-							swap();
-						} else if (clickCol === activeCol) {
-							// перемещение по у
-							swap();							
-						}
+					if (swapSettings.result) {
+						// Если комбинация образуется
+						swap();	
+						console.log(model.whichCellDell);
 					} else {
 						// Если комбинация не образуется то возвращаем фрукты на место	
 						swap();
@@ -272,6 +345,7 @@ myCanvas.onclick = function(e) {
 	}	
 }
 
+// Данные для обмена фруктов местами
 var swapSettings = {	
 	fillSwapSettings: function(model, activeRow, activeCol, clickRow, clickCol) {
 		var activeCell = model.field[activeRow][activeCol];
@@ -302,7 +376,7 @@ var swapSettings = {
 		}	
 	},	
 }
-
+// меняет фрукты местами
 function swap() {
 	ctx.clearRect(swapSettings.x1, swapSettings.y1, swapSettings.width, swapSettings.heigth);
 	ctx.clearRect(swapSettings.x2, swapSettings.y2, swapSettings.width, swapSettings.heigth);
@@ -323,6 +397,10 @@ function swap() {
 			if(!(swapSettings.result)) {
 				// если комбинация не образуется возвращаем фрукты на место
 				reverseSwap();
+			} else {
+				// в проивном случае формируем список к удалению фруктов, предварительно его очистив
+				for (var member in model.whichCellDell) delete model.whichCellDell[member];
+				model.fillWhichCellDell(swapSettings.result1, swapSettings.result2);
 			}
 		}	
 	} else if (swapSettings.x1 === swapSettings.x2) {
@@ -336,14 +414,18 @@ function swap() {
 		if (swapSettings.y1 > swapSettings.y) {
 			swapSettings.y1 -= 2;
 			swapSettings.y2 += 2;
-			if(!(swapSettings.result)) {
+			if (!(swapSettings.result)) {
 				// если комбинация не образуется возвращаем фрукты на место
 				reverseSwap();
+			} else {
+				// в проивном случае формируем список к удалению фруктов, предварительно его очистив
+				for (var member in model.whichCellDell) delete model.whichCellDell[member];
+				model.fillWhichCellDell(swapSettings.result1, swapSettings.result2);
 			}
 		}	
 	}
 }
-// меняет фрукты обратно местами
+// меняет фрукты обратно
 function reverseSwap() {
 	ctx.clearRect(swapSettings.x1, swapSettings.y1, swapSettings.width, swapSettings.heigth);
 	ctx.clearRect(swapSettings.x2, swapSettings.y2, swapSettings.width, swapSettings.heigth);
