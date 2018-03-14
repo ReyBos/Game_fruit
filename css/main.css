@@ -10,8 +10,9 @@ body {
 .container {
 	width: 600px;
 	margin: 0 auto;
-	height: 100vh;	
+	min-height: 100vh;	
 	font-family: 'New Rocker', cursive;
+	padding-bottom: 30px;
 }
 
 .text-selection_none {
@@ -36,7 +37,7 @@ body {
 }
 
 #c1 {	
-	background-image: url(../img/canvas-bg.png);
+	background-image: url(../img/canvas-bg-test.png);
 	height: 400px;
 	width: 400px;		
 	margin: 50px 0;	
