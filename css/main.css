@@ -8,7 +8,7 @@ body {
 }
 
 .container {
-	width: 400px;
+	width: 600px;
 	margin: 0 auto;
 	height: 100vh;	
 	font-family: 'New Rocker', cursive;
@@ -31,10 +31,14 @@ body {
 	
 }
 
+#game-field {
+	text-align: center;
+}
+
 #c1 {	
 	background-image: url(../img/canvas-bg.png);
 	height: 400px;
-	width: 400px;	
+	width: 400px;		
 	margin: 50px 0;	
 	cursor: pointer;
 }
@@ -52,4 +56,10 @@ body {
 
 .fruit {
 	display: none;
+}
+
+.description {
+	background-color: #b0baaf;	
+	opacity: 0.8;
+	margin-top: 40px;
 }
