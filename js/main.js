@@ -141,7 +141,6 @@ function Model(numberRows, numberCols, widthCell, heigthCell) {
 		this.field[clickRow][clickCol].position.x1 = objPosX1;
 		this.field[clickRow][clickCol].position.y1 = objPosY1;
 		this.field[clickRow][clickCol] = obj;
-
 	}
 }
 
@@ -237,19 +236,21 @@ myCanvas.onclick = function(e) {
 					// Проверяем образуется ли ряд из трех одинаковых фруктов после перестановки
 					var swapResult1 = model.checkCell(activeRow, activeCol);
 					var swapResult2 = model.checkCell(clickRow, clickCol);
+					// Образуется ли комбинация, если нет, фрукты нужно переместить на место
+					swapSettings.result = (swapResult1[0] || swapResult1[2] || swapResult2[0] || swapResult2[2]);
 					if (swapResult1[0] || swapResult1[2] || swapResult2[0] || swapResult2[2]) {						
-						// Если образуется ряд
-						console.log("Ряд образуется");
+						// Если образуется комбинация						
 						if (clickRow === activeRow) {
-							swapX();
+							// перемещение по х
+							swap();
 						} else if (clickCol === activeCol) {
-							console.log("заглушка");							
+							// перемещение по у
+							swap();							
 						}
 					} else {
-						// Если ряд не образуется то возвращаем фрукты на место
-						console.log("Ряд не образуется");
-						reverseSwapX();	
-						model.swapCell(activeRow, activeCol, clickRow, clickCol);											
+						// Если комбинация не образуется то возвращаем фрукты на место	
+						swap();
+						model.swapCell(activeRow, activeCol, clickRow, clickCol);						
 					}	
 					activeRow = -1;
 					activeCol = -1;
@@ -302,55 +303,77 @@ var swapSettings = {
 	},	
 }
 
-function swapX() {
+function swap() {
 	ctx.clearRect(swapSettings.x1, swapSettings.y1, swapSettings.width, swapSettings.heigth);
 	ctx.clearRect(swapSettings.x2, swapSettings.y2, swapSettings.width, swapSettings.heigth);
 	ctx.beginPath();
 	ctx.drawImage(swapSettings.pic1, swapSettings.x1, swapSettings.y1);
 	ctx.drawImage(swapSettings.pic2, swapSettings.x2, swapSettings.y2);
-	swapSettings.x1 += 2;
-	swapSettings.x2 -= 2;
-	if (swapSettings.x1 <= swapSettings.x) {
-		requestAnimationFrame(swapX);
-	} 
-	if (swapSettings.x1 > swapSettings.x) {
-		swapSettings.x1 -= 2;
-		swapSettings.x2 += 2;
-	}	
-}
-
-function reverseSwapX() {
-	ctx.clearRect(swapSettings.x1, swapSettings.y1, swapSettings.width, swapSettings.heigth);
-	ctx.clearRect(swapSettings.x2, swapSettings.y2, swapSettings.width, swapSettings.heigth);
-	ctx.beginPath();
-	ctx.drawImage(swapSettings.pic1, swapSettings.x1, swapSettings.y1);
-	ctx.drawImage(swapSettings.pic2, swapSettings.x2, swapSettings.y2);
-	swapSettings.x1 += 2;
-	swapSettings.x2 -= 2;
-	if (swapSettings.x1 <= swapSettings.x) {
-		requestAnimationFrame(reverseSwapX);
-	} 
-	if (swapSettings.x1 > swapSettings.x) {
-		swapSettings.x1 -= 2;
-		swapSettings.x2 += 2;
-		reverseSwapXPart2();
-	}	
-}
-
-function reverseSwapXPart2() {
-	ctx.clearRect(swapSettings.x1, swapSettings.y1, swapSettings.width, swapSettings.heigth);
-	ctx.clearRect(swapSettings.x2, swapSettings.y2, swapSettings.width, swapSettings.heigth);
-	ctx.beginPath();
-	ctx.drawImage(swapSettings.pic1, swapSettings.x1, swapSettings.y1);
-	ctx.drawImage(swapSettings.pic2, swapSettings.x2, swapSettings.y2);
-	swapSettings.x1 -= 2;
-	swapSettings.x2 += 2;
-	if (swapSettings.x2 <= swapSettings.x) {
-		requestAnimationFrame(reverseSwapXPart2);
-	} 
-	if (swapSettings.x2 > swapSettings.x) {
+	if (swapSettings.y1 === swapSettings.y2) {
+		//перемещение по горизонтали
 		swapSettings.x1 += 2;
-		swapSettings.x2 -= 2;		
+		swapSettings.x2 -= 2;
+		if (swapSettings.x1 <= swapSettings.x) {
+			requestAnimationFrame(swap);
+		} 
+		// последеним шагом мы делаем лишнее изменение х1 и х2, откатываем их и при необходимости меняем фрукты обратно местами
+		if (swapSettings.x1 > swapSettings.x) {
+			swapSettings.x1 -= 2;
+			swapSettings.x2 += 2;
+			if(!(swapSettings.result)) {
+				// если комбинация не образуется возвращаем фрукты на место
+				reverseSwap();
+			}
+		}	
+	} else if (swapSettings.x1 === swapSettings.x2) {
+		//перемещение по вертикали
+		swapSettings.y1 += 2;
+		swapSettings.y2 -= 2;
+		if (swapSettings.y1 <= swapSettings.y) {
+			requestAnimationFrame(swap);
+		} 
+		// последеним шагом мы делаем лишнее изменение у1 и у2, откатываем их и при необходимости меняем фрукты обратно местами
+		if (swapSettings.y1 > swapSettings.y) {
+			swapSettings.y1 -= 2;
+			swapSettings.y2 += 2;
+			if(!(swapSettings.result)) {
+				// если комбинация не образуется возвращаем фрукты на место
+				reverseSwap();
+			}
+		}	
+	}
+}
+// меняет фрукты обратно местами
+function reverseSwap() {
+	ctx.clearRect(swapSettings.x1, swapSettings.y1, swapSettings.width, swapSettings.heigth);
+	ctx.clearRect(swapSettings.x2, swapSettings.y2, swapSettings.width, swapSettings.heigth);
+	ctx.beginPath();
+	ctx.drawImage(swapSettings.pic1, swapSettings.x1, swapSettings.y1);
+	ctx.drawImage(swapSettings.pic2, swapSettings.x2, swapSettings.y2);
+	if (swapSettings.y1 === swapSettings.y2) {
+		//перемещение по горизонтали
+		swapSettings.x1 -= 2;
+		swapSettings.x2 += 2;
+		if (swapSettings.x2 <= swapSettings.x) {
+			requestAnimationFrame(reverseSwap);
+		} 
+		// послденим шагом мы делаем лишнее изменение х1 и х2, откатываем их
+		if (swapSettings.x2 > swapSettings.x) {
+			swapSettings.x1 += 2;
+			swapSettings.x2 -= 2;		
+		}
+	} else if (swapSettings.x1 === swapSettings.x2) {
+		//перемещение по вертикали
+		swapSettings.y1 -= 2;
+		swapSettings.y2 += 2;
+		if (swapSettings.y2 <= swapSettings.y) {
+			requestAnimationFrame(reverseSwap);
+		} 
+		// послденим шагом мы делаем лишнее изменение х1 и х2, откатываем их
+		if (swapSettings.y2 > swapSettings.y) {
+			swapSettings.y1 += 2;
+			swapSettings.y2 -= 2;		
+		}
 	}	
 }
 
