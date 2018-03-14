@@ -180,43 +180,52 @@ function Model(numberRows, numberCols, widthCell, heigthCell) {
 	}, 
 
 	// Список ячеек к удалению
-	this.whichCellDell = {},
+	this.whichCellDell = [],
 
 	// Заполняем список к удалению
-	this.fillWhichCellDell = function(result1, result2) {
+	this.fillWhichCellDell = function(result1, result2) {					
 		//		        0   1    2    3        4            5            6          7             8              9
-		// result = [false, 1, false, 1, leftFruitCol, rightFruitCol, fruitRow, topFruitRow, bottomFruitRow, FruitCol]
-		// совпадение в строке
+		// result = [false, 1, false, 1, leftFruitCol, rightFruitCol, fruitRow, topFruitRow, bottomFruitRow, FruitCol] (см. выше)
+		// каждый result содержит информацию о том, какие промежутки ячеек нужно удалить, 
+		// leftFruitCol - начало строки, rightFruitCol - конец строки, fruitRow - номер строки
+		// topFruitRow - начало столбца, bottomFruitRow - конец столбца, FruitCol - номер столбца
 		if (result1[0]) {
-			this.whichCellDell.row1 = {
-				numberRow: result1[6], // номер строки для удаления
-				startRow: result1[4], // начало строки
-				endRow: result1[5] // конец строки
+			for (var i = result1[4]; i <= result1[5]; i++) {
+				if (checkCell(this.whichCellDell, [result1[6], i])) {
+					this.whichCellDell.push([result1[6], i]);
+				}				
 			}
 		}
-		// совпадение в столбце
 		if (result1[2]) {
-			this.whichCellDell.col1 = {
-				numberCol: result1[9],
-				startCol: result1[7],
-				endCol: result1[8]
+			for (var i = result1[7]; i <= result1[8]; i++) {
+				if (checkCell(this.whichCellDell, [i, result1[9]])) {
+					this.whichCellDell.push([i, result1[9]]);
+				}				
 			}
 		}
-		// совпадение в строке
 		if (result2[0]) {
-			this.whichCellDell.row2 = {
-				numberRow: result2[6], // номер строки для удаления
-				startRow: result2[4], // начало строки
-				endRow: result2[5] // конец строки
+			for (var i = result2[4]; i <= result2[5]; i++) {
+				if (checkCell(this.whichCellDell, [result2[6], i])) {
+					this.whichCellDell.push([result2[6], i]);
+				}				
 			}
 		}
-		// совпадение в столбце
 		if (result2[2]) {
-			this.whichCellDell.col2 = {
-				numberCol: result2[9],
-				startCol: result2[7],
-				endCol: result2[8]
+			for (var i = result2[7]; i <= result2[8]; i++) {
+				if (checkCell(this.whichCellDell, [i, result2[9]])) {
+					this.whichCellDell.push([i, result2[9]]);
+				}				
 			}
+		}
+
+		// проверяет есть ли такие данные в массиве, если нет возвращает true
+		function checkCell(array, content) {
+			for (var i = 0; i < array.length; i++) {
+				if (array[i][0] === content[0] && array[i][1] === content[1]) {
+				return false;					
+				}
+			}
+			return true;
 		}
 	}
 }
@@ -278,6 +287,11 @@ newGame.onclick = function() {
 	active = false;
 	activeRow = -1;
 	activeCol = -1;
+}
+
+// Запрет контекстного меню на игровом поле 
+myCanvas.oncontextmenu = function() {
+	return false;
 }
 
 // Нажата левая кнопка мыши на игровом поле 
@@ -399,7 +413,7 @@ function swap() {
 				reverseSwap();
 			} else {
 				// в проивном случае формируем список к удалению фруктов, предварительно его очистив
-				for (var member in model.whichCellDell) delete model.whichCellDell[member];
+				model.whichCellDell.length = 0;				
 				model.fillWhichCellDell(swapSettings.result1, swapSettings.result2);
 			}
 		}	
@@ -418,8 +432,8 @@ function swap() {
 				// если комбинация не образуется возвращаем фрукты на место
 				reverseSwap();
 			} else {
-				// в проивном случае формируем список к удалению фруктов, предварительно его очистив
-				for (var member in model.whichCellDell) delete model.whichCellDell[member];
+				// в проивном случае формируем список к удалению фруктов, предварительно его очистив	
+				model.whichCellDell.length = 0;					
 				model.fillWhichCellDell(swapSettings.result1, swapSettings.result2);
 			}
 		}	
@@ -457,8 +471,4 @@ function reverseSwap() {
 			swapSettings.y2 -= 2;		
 		}
 	}	
-}
-
-myCanvas.oncontextmenu = function() {
-	return false;
 }
