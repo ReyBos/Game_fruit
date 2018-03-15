@@ -22,6 +22,7 @@ function Model(numberRows, numberCols, widthCell, heightCell) {
 	this.cols = numberCols, // Число столбцов
 	this.widthCell = widthCell, // ширина ячейки !!! widthCell === heightCell !!!
 	this.heightCell = heightCell, // высота ячейки
+	this.canGoOn = true; // разрешает выполнение хода игрока
 
 	// заполняет игровое поле случайными фруктами
 	this.fillField = function() {
@@ -81,6 +82,7 @@ function Model(numberRows, numberCols, widthCell, heightCell) {
 		var topFruitRow; // номер строки		
 		// последний в вертикальной комбинации фрукт
 		var bottomFruitRow; // номер строки		
+
 
 		var checkFruit = this.field[coordRow][coordCol].typeFruit; // какой фрукт в ячейке		
 		// проверяем соседние ячейки по горизонтали слева 
@@ -337,7 +339,7 @@ myCanvas.oncontextmenu = function() {
 
 // Нажата левая кнопка мыши на игровом поле 
 myCanvas.onclick = function(e) {
-	if (gameStart) {	
+	if (gameStart && model.canGoOn) {		
 		// Номер нажатой строки	
 		var clickRow = Math.floor(e.offsetY / model.heightCell);
 		// Номер нажатого столбца		
@@ -372,10 +374,10 @@ myCanvas.onclick = function(e) {
 					// Образуется ли комбинация, если нет, фрукты нужно переместить на место
 					swapSettings.result = (swapResult1[0] || swapResult1[2] || swapResult2[0] || swapResult2[2]);
 					if (swapResult1[0] || swapResult1[2] || swapResult2[0] || swapResult2[2]) {
-						// Если комбинация образуется
+						// Если комбинация образуется					
 						swap();							
 					} else {
-						// Если комбинация не образуется то возвращаем фрукты на место							
+						// Если комбинация не образуется то возвращаем фрукты на место
 						swap();
 						model.swapCell(activeRow, activeCol, clickRow, clickCol);
 					}	
@@ -432,6 +434,7 @@ var swapSettings = {
 }
 // анимация обмена местами фруктов
 function swap() {
+	model.canGoOn = false;  // запрещает продолжение программы пока анимация не будет закончена
 	ctx.clearRect(swapSettings.x1, swapSettings.y1, swapSettings.width, swapSettings.height);
 	ctx.clearRect(swapSettings.x2, swapSettings.y2, swapSettings.width, swapSettings.height);
 	ctx.beginPath();
@@ -501,19 +504,21 @@ function reverseSwap() {
 		// послденим шагом мы делаем лишнее изменение х1 и х2, откатываем их
 		if (swapSettings.x2 > swapSettings.x) {
 			swapSettings.x1 += 2;
-			swapSettings.x2 -= 2;		
+			swapSettings.x2 -= 2;	
+			model.canGoOn = true; // разрешает продолжение программы
 		}
 	} else if (swapSettings.x1 === swapSettings.x2) {
 		//перемещение по вертикали
 		swapSettings.y1 -= 2;
 		swapSettings.y2 += 2;
-		if (swapSettings.y2 <= swapSettings.y) {
+		if (swapSettings.y2 <= swapSettings.y) {			
 			requestAnimationFrame(reverseSwap);
 		} 
 		// послденим шагом мы делаем лишнее изменение х1 и х2, откатываем их
 		if (swapSettings.y2 > swapSettings.y) {
 			swapSettings.y1 += 2;
-			swapSettings.y2 -= 2;		
+			swapSettings.y2 -= 2;
+			model.canGoOn = true; // разрешает продолжение программы		
 		}
 	}	
 }
@@ -598,7 +603,10 @@ function displayNewFruit() {
 	}
 	obj.startYUp -= obj.step;	
 	obj.heightUp += obj.step;	
-	if (obj.startYUp >= 0) { // width потому что height постоянно меняется, а изначально они равны		
+	if (obj.startYUp >= 0) { // width потому что height постоянно меняется, а изначально они равны	
 		requestAnimationFrame(displayNewFruit);
+	}
+	if (obj.startYUp < 0) {
+		model.canGoOn = true;  // разрешает продолжение программы
 	}
 }
