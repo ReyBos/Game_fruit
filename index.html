@@ -4,7 +4,7 @@
 	<meta charset="UTF-8">
 	<title>Fruit Game</title>
 	<link href="https://fonts.googleapis.com/css?family=New+Rocker" rel="stylesheet">
-	<link rel="stylesheet" href="css/main.css?5">
+	<link rel="stylesheet" href="css/main.css?6">
 </head>
 <body>
 	<section class="main-frame">
@@ -18,18 +18,16 @@
 			<img src="img/fruits/pear.png" alt="" id="pear" class="fruit">
 			<img src="img/fruits/plum.png" alt="" id="plum" class="fruit">
 			<img src="img/fruits/tomato.png" alt="" id="tomato" class="fruit">
-			<button id="new-game" class="text-selection_none">New Game</button>
-			<div class="description text-selection_none">
-				<p>Цель игры собрать в горизонтальный или вертикальный ряд три и более одинаковых фрукта (комбинацию фруктов). Чем больше фруктов в ряду, тем больше очков. <br>
-				На данный момент реализованны следующие возможности игры: <br>
-				- строится игровое поле на котором нет комбинаций с тремя и более фруктами в ряд;<br>
-				- добавлена возможность выделения любого фрукта щелчком мыши и снятие выделения;<br>
-				- выделенный фрукт возможно обменять с соседним по горизонтали, если образуется комбинация, то изменения сохраняются, иначе фрукты возвращаются на места;<br>
-				- реализован обмен фруктов по вертикали;<br>
-				- если после обмена фруктов местами образуется комбинация, то она удаляется с игрового поля<br>
+			<div class="buttons">
+				<button id="new-game" class="text-selection_none button">New Game</button>
+				<button id="rules" class="text-selection_none button">Rules</button>
+			</div>
+			<div class="description text-selection_none hidden" id="description">
+				<p class="description-text">Цель игры собрать в горизонтальный или вертикальный ряд три и более одинаковых фрукта (комбинацию фруктов). <br>
+				Щелкая мышью на фрукт, выделяйте его, при клике на соседний фрукт по горизонтали или вертикали, обменивайте их местами, что бы собрать комбинацию.
 				</p>
 			</div>
-			<script src="js/main.js?7"></script>			
+			<script src="js/main.js?8"></script>			
 		</div>
 	</section>
 </body>

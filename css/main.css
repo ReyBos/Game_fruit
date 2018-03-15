@@ -8,7 +8,7 @@ body {
 }
 
 .container {
-	width: 600px;
+	width: 400px;
 	margin: 0 auto;
 	min-height: 100vh;	
 	font-family: 'New Rocker', cursive;
@@ -37,16 +37,15 @@ body {
 }
 
 #c1 {	
-	background-image: url(../img/canvas-bg-test.png);
+	background-image: url(../img/canvas-bg.png);
 	height: 400px;
 	width: 400px;		
 	margin: 50px 0;	
 	cursor: pointer;
 }
 
-#new-game {
-	margin: 0 auto;
-	display: block;
+.button {
+	margin-left: 25px;	
 	cursor: pointer;
 	font-family: 'New Rocker', cursive;
 	font-size: 24px;
@@ -55,12 +54,39 @@ body {
 	opacity: 0.65;	
 }
 
+.button:first-child {
+	margin-left: 0;	
+}
+
+.buttons {
+	text-align: center;
+}
+
 .fruit {
 	display: none;
 }
 
 .description {
 	background-color: #b0baaf;	
-	opacity: 0.8;
+	opacity: 0.7;
+	margin: 0 auto;
 	margin-top: 40px;
+		
+}
+
+.description-text {
+	padding: 10px 0;
+	width: 90%;
+	margin-left: 5%;
+	text-align: justify;
+}
+
+.hidden {
+	opacity: 0;
+	transition: 1s;
+}
+
+.visible {
+	opacity: 0.7;
+	transition: 1s;
 }

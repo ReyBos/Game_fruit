@@ -16,12 +16,12 @@ function Fruit(startX1, startY1, mayExplode, canBeMoved, typeFruit) {
 }
 
 // Игровое поле
-function Model(numberRows, numberCols, widthCell, heigthCell) {	
+function Model(numberRows, numberCols, widthCell, heightCell) {	
 	this.field = [],       // Содержит объекты игрового поля
 	this.rows = numberRows, // Число строк 
 	this.cols = numberCols, // Число столбцов
-	this.widthCell = widthCell, // ширина ячейки
-	this.heigthCell = heigthCell, // высота ячейки
+	this.widthCell = widthCell, // ширина ячейки !!! widthCell === heightCell !!!
+	this.heightCell = heightCell, // высота ячейки
 
 	// заполняет игровое поле случайными фруктами
 	this.fillField = function() {
@@ -31,33 +31,39 @@ function Model(numberRows, numberCols, widthCell, heigthCell) {
 			this.field[i] = [];
 			for (var j = 0; j < this.cols; j++) {
 				do {
-					var typeFruit; // Название фрукта				
-					var number = Math.floor(Math.random()*5); // определяем случайный фрукт
-					switch(number) {
-						case 0:
-							typeFruit = "apple"; // яблоко
-							break;
-							case 1:
-							typeFruit = "plum"; // слива
-							break;
-							case 2:
-							typeFruit = "pear"; // груша
-							break;
-							case 3:
-							typeFruit = "orange"; // апельсин
-							break;
-							case 4:
-							typeFruit = "tomato"; // томат
-							break;
-					}				
+					var typeFruit = this.randomFruit(); // Генерируем случайный фрукт
 					this.field[i][j] = new Fruit(startX1, startY1, true, true, typeFruit);
 					var check = this.checkCell(i, j);
 				} while (check[0] || check[2])
 				startX1 += this.widthCell; // левый верхний угол каждой клетки
 			}			
-			startY1 += this.heigthCell; // левый верхний угол каждой клетки
+			startY1 += this.heightCell; // левый верхний угол каждой клетки
 			startX1 = 0;
 		}
+	},
+
+	// генерирует случайный фрукт
+	this.randomFruit = function() {
+		var typeFruit; // Название фрукта				
+		var number = Math.floor(Math.random()*5); 
+		switch(number) {
+			case 0:
+				typeFruit = "apple"; // яблоко
+				break;
+			case 1:
+				typeFruit = "plum"; // слива
+				break;
+			case 2:
+				typeFruit = "pear"; // груша
+				break;
+			case 3:
+				typeFruit = "orange"; // апельсин
+				break;
+			case 4:
+				typeFruit = "tomato"; // томат
+				break;
+			}
+		return typeFruit;
 	},
 
 	// метод для проверки не образует ли текущая ячейка горизонтальный или вертикальный ряд
@@ -230,13 +236,25 @@ function Model(numberRows, numberCols, widthCell, heigthCell) {
 		}		
 	},
 
-	// удаляет фрукты из field по списку whichCellDell
+	// заменяет фрукты из field по списку whichCellDell
 	this.dellFruitFromField = function() {
 		for (var i = 0; i < this.whichCellDell.length; i++) {
 			var row = this.whichCellDell[i][0];
 			var col = this.whichCellDell[i][1];
-			this.field[row][col] = {};
+			this.field[row][col].typeFruit = "";
 		}
+	}, 
+
+	// ставим новый фрукт на место удаленного
+	this.newFruit = function() {
+		for (var i = 0; i < this.whichCellDell.length; i++) {
+			var row = this.whichCellDell[i][0];
+			var col = this.whichCellDell[i][1];
+			do {
+				this.field[row][col].typeFruit = this.randomFruit();
+				var check = this.checkCell(row, col);
+			} while (check[0] || check[2]);			
+		}		
 	}
 }
 
@@ -258,18 +276,18 @@ var view = {
 		var x = model.field[row][col].position.x1; // левый верхний угол
 		var y = model.field[row][col].position.y1; // левый верхний угол
 		var width = model.widthCell;
-		var heigth = model.heigthCell;
+		var height = model.heightCell;
 		if (model.field[row][col].canBeMoved && !active) {
 			// если нет активных ячеек
 			context.beginPath(); 			
 			context.strokeStyle = "black";
 			context.lineWidth = "1";
-			context.rect(x + 1, y + 1, width - 2, heigth - 2);
+			context.rect(x + 1, y + 1, width - 2, height - 2);
 			context.stroke();
 		} else {
 			// если ячейка по которой кликнули активна, снимаем выделение
 			context.beginPath(); 
-			context.clearRect(x, y, width, heigth);
+			context.clearRect(x, y, width, height);
 			var id = model.field[row][col].typeFruit;			
 			var pic = document.getElementById(id);			
 			context.drawImage(pic, x, y)
@@ -299,6 +317,19 @@ newGame.onclick = function() {
 	activeCol = -1;
 }
 
+// Кнопка Rulles
+var rules = document.getElementById("rules");
+rules.onclick = function() {
+	var description = document.getElementById("description");
+	if (description.classList.contains("hidden")) {
+		description.classList.remove("hidden");
+		description.classList.add("visible");
+	} else {
+		description.classList.remove("visible");
+		description.classList.add("hidden");
+	}
+}
+
 // Запрет контекстного меню на игровом поле 
 myCanvas.oncontextmenu = function() {
 	return false;
@@ -308,7 +339,7 @@ myCanvas.oncontextmenu = function() {
 myCanvas.onclick = function(e) {
 	if (gameStart) {	
 		// Номер нажатой строки	
-		var clickRow = Math.floor(e.offsetY / model.heigthCell);
+		var clickRow = Math.floor(e.offsetY / model.heightCell);
 		// Номер нажатого столбца		
 		var clickCol = Math.floor(e.offsetX / model.widthCell);
 		// Выполняем действие если ячейку можно переместить
@@ -340,13 +371,13 @@ myCanvas.onclick = function(e) {
 					swapSettings.result2 = swapResult2;
 					// Образуется ли комбинация, если нет, фрукты нужно переместить на место
 					swapSettings.result = (swapResult1[0] || swapResult1[2] || swapResult2[0] || swapResult2[2]);
-					if (swapSettings.result) {
+					if (swapResult1[0] || swapResult1[2] || swapResult2[0] || swapResult2[2]) {
 						// Если комбинация образуется
-						swap();	
-						
+						swap();							
 					} else {
-						// Если комбинация не образуется то возвращаем фрукты на место	
-						swap();												
+						// Если комбинация не образуется то возвращаем фрукты на место							
+						swap();
+						model.swapCell(activeRow, activeCol, clickRow, clickCol);
 					}	
 					activeRow = -1;
 					activeCol = -1;
@@ -375,7 +406,7 @@ var swapSettings = {
 		var clickCell = model.field[clickRow][clickCol];	
 		// заполняем данные для обмена
 		swapSettings.width = model.widthCell;
-		swapSettings.heigth = model.heigthCell;				
+		swapSettings.height = model.heightCell;				
 		if (activeCell.position.x1 < clickCell.position.x1 || activeCell.position.y1 < clickCell.position.y1) {
 			// если обмен идет с ячейкой расположенной справа или снизу от активной, то активная считается под номером 1
 			swapSettings.x1 = activeCell.position.x1;
@@ -401,8 +432,8 @@ var swapSettings = {
 }
 // анимация обмена местами фруктов
 function swap() {
-	ctx.clearRect(swapSettings.x1, swapSettings.y1, swapSettings.width, swapSettings.heigth);
-	ctx.clearRect(swapSettings.x2, swapSettings.y2, swapSettings.width, swapSettings.heigth);
+	ctx.clearRect(swapSettings.x1, swapSettings.y1, swapSettings.width, swapSettings.height);
+	ctx.clearRect(swapSettings.x2, swapSettings.y2, swapSettings.width, swapSettings.height);
 	ctx.beginPath();
 	ctx.drawImage(swapSettings.pic1, swapSettings.x1, swapSettings.y1);
 	ctx.drawImage(swapSettings.pic2, swapSettings.x2, swapSettings.y2);
@@ -418,7 +449,7 @@ function swap() {
 			swapSettings.x1 -= 2;
 			swapSettings.x2 += 2;
 			if(!(swapSettings.result)) {
-				// если комбинация не образуется возвращаем фрукты на место
+				// если комбинация не образуется возвращаем фрукты на место				
 				reverseSwap();
 			} else {
 				// в проивном случае формируем список к удалению фруктов, предварительно его очистив
@@ -455,8 +486,8 @@ function swap() {
 
 // анимация обратного обмена местами фруктов
 function reverseSwap() {
-	ctx.clearRect(swapSettings.x1, swapSettings.y1, swapSettings.width, swapSettings.heigth);
-	ctx.clearRect(swapSettings.x2, swapSettings.y2, swapSettings.width, swapSettings.heigth);
+	ctx.clearRect(swapSettings.x1, swapSettings.y1, swapSettings.width, swapSettings.height);
+	ctx.clearRect(swapSettings.x2, swapSettings.y2, swapSettings.width, swapSettings.height);
 	ctx.beginPath();
 	ctx.drawImage(swapSettings.pic1, swapSettings.x1, swapSettings.y1);
 	ctx.drawImage(swapSettings.pic2, swapSettings.x2, swapSettings.y2);
@@ -487,9 +518,10 @@ function reverseSwap() {
 	}	
 }
 
-// Данные для удаления фруктов
+// Данные для удаления фруктов (и отрисовки новых)
 var dellComboFruitSettings = {	
 	array: [],
+	// заполняет данные для удаления
 	filldellComboFruitSettings: function(model) {
 		this.array.length = 0; 
 		this.startY = 0; // счетчик движения вниз по y
@@ -497,7 +529,9 @@ var dellComboFruitSettings = {
 		this.numberCells = model.whichCellDell.length;
 		this.field = model.field;
 		this.width = model.widthCell; // шириная ячейки игрового поля
-		this.heigth = model.heigthCell; // высота		
+		this.height = model.heightCell; // высота	
+		this.startYUp = this.height;	// счетчик движения вверх по y
+		this.heightUp = 0; // для displayNewFruit()
 		// перебираем удаляемые ячейки и для каждой создаем объект с нужными параметрами для удаления
 		for (var i = 0; i < this.numberCells; i++) {			
 			this.array[i] = {};				
@@ -512,27 +546,59 @@ var dellComboFruitSettings = {
 			this.array[i].pic = document.getElementById(this.array[i].picId);				
 		}
 		dellComboFruit(); // После того как заполнили необходимые данные вызываем анимацию удаления
+	},
+
+	// Заменяет удаленные фрукты на новые
+	placeNewFruit: function() {
+		for (var i = 0; i < this.numberCells; i++) {
+			this.array[i].picId = this.field[this.array[i].row][this.array[i].col].typeFruit;
+			this.array[i].pic = document.getElementById(this.array[i].picId);
+		}	
+		// отображаем их
+		displayNewFruit();
 	}
 }
 
-var array = dellComboFruitSettings.array;
-var obj = dellComboFruitSettings;
 // анимация удаления фруктов с поля
 function dellComboFruit() {			
+	var array = dellComboFruitSettings.array;
+	var obj = dellComboFruitSettings;
 	for (var i = 0; i < array.length; i++) {	
-		ctx.clearRect(array[i].x, array[i].y, obj.width, obj.heigth);
+		ctx.clearRect(array[i].x, array[i].y, obj.width, obj.height);
 		ctx.beginPath();		
-		ctx.drawImage(array[i].pic, 0, 0, obj.width, obj.heigth, array[i].x, array[i].y, obj.width, obj.heigth);	
-		array[i].y += obj.step;
+		ctx.drawImage(array[i].pic, 0, 0, obj.width, obj.height, array[i].x, array[i].y, obj.width, obj.height);	
+		array[i].y += obj.step;		
 	}
-	obj.heigth -= obj.step;		
+	obj.height -= obj.step;		
 	obj.startY += obj.step;	
 	if (obj.startY <= obj.width) { // width потому что height постоянно меняется, а изначально они равны
 		requestAnimationFrame(dellComboFruit);
 	}
-	if (obj.startY > obj.width) {
+	if (obj.startY > obj.width) {	
+		obj.height = model.heightCell;
+		for (var i = 0; i < array.length; i++) {
+			array[i].y -= (obj.step + obj.width); // возвращаем у в левый верхний угол
+		}
 		// после окончания анимации удаляем фрукты из игрового поля field		
 		model.dellFruitFromField();
-		console.log(dellComboFruitSettings.array);
+		model.newFruit();
+		dellComboFruitSettings.placeNewFruit();
+	}
+}
+
+
+// Отображает новые фрукты взамен удаленных
+function displayNewFruit() {	
+	var array = dellComboFruitSettings.array;
+	var obj = dellComboFruitSettings;		
+	for (var i = 0; i < array.length; i++) {		
+		ctx.clearRect(array[i].x, array[i].y, obj.width, obj.height);
+		ctx.beginPath();		
+		ctx.drawImage(array[i].pic, 0, 0, obj.width, obj.heightUp, array[i].x, array[i].y+obj.startYUp, obj.width, obj.heightUp);
+	}
+	obj.startYUp -= obj.step;	
+	obj.heightUp += obj.step;	
+	if (obj.startYUp >= 0) { // width потому что height постоянно меняется, а изначально они равны		
+		requestAnimationFrame(displayNewFruit);
 	}
 }
